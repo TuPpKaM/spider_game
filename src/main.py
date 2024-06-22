@@ -3,8 +3,6 @@ import sys
 import pygame
 
 from game import Game
-from settings import *
-
 
 def main():
     pygame.init()

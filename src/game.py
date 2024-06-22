@@ -48,6 +48,8 @@ class Game():
                 x,y = event.pos
                 self.prev_left_click_pos = ((x,y))
 
+                self.units.spawn_spider(pos=((x,y)))
+
                 collisions = pygame.sprite.spritecollide(Point(x,y), self.map.get_grid_sprites(), False, pygame.sprite.collide_mask) #TODO grid_sprites
                 if collisions:
                     for sprite in collisions:

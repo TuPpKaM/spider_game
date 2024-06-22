@@ -34,7 +34,7 @@ class SpriteLoader:
 
         return pygame.transform.scale(original_sprite, (new_width, new_height))
     
-    def find_sheet_in_folder(self, parent_folder: str, subfolder_name: str, angle: int):
+    def find_sheet_in_folder(self, parent_folder: str, subfolder_name: str, angle: int) -> str:
         subfolder_path = os.path.join(parent_folder, subfolder_name)
     
         if not os.path.exists(subfolder_path):

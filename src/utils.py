@@ -1,7 +1,9 @@
-from enum import Enum
 import os
 import random
+from enum import Enum
+
 import pygame
+
 
 class SpriteLoader:
     def split_sprite(self, path, cols, rows = 1, scale = 1) -> list:
@@ -79,10 +81,10 @@ class AnimationManager:
         return int(cols) , int(rows), float(scale)
     
     def random_angle(self, step: float = 22.5) -> int:
-        random_int = random.randint(0, 360)
+        random_int = random.randint(0, 337)
         nearest_multiple_index = round(random_int / step)
         angle = int(nearest_multiple_index * step)
-        if(angle < 0 or angle > 360):
+        if(angle < 0 or angle > 337):
             raise Exception()
         else:
             return angle
@@ -97,5 +99,13 @@ class Color:
     DARK_BLUE = (7, 72, 91)
 
 class AnimationMode(Enum):
-    IDLE_01 = 1,
+    IDLE_01 = 1
+    IDLE_02 = 2
     ATTACK_02 = 12
+
+class GameState(Enum):
+    INITIALIZING = 0
+    INITIALIZED = 1
+    MAIN_MENU = 2
+    GAME = 3
+    QUITTING = 10

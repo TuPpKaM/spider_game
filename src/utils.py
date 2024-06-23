@@ -92,6 +92,7 @@ class AnimationManager:
 class Color:
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
+    GRAY = (200, 200, 200)
     RED = (219, 7, 61)
     ORANGE = (219, 165, 7)
     LIGHT_BLUE = (142, 199, 210)

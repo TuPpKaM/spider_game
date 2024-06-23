@@ -1,6 +1,6 @@
 import pygame
 
-from gui import CordBox
+from gui import CordBox, MainMenu
 from map import Point, Tile
 from settings import *
 from spiders import Units
@@ -23,16 +23,16 @@ class Game():
         self.prev_left_click_pos = None
         self.font = pygame.font.Font(None, 36)
         self.cord_box = CordBox(self.font)
+        self.main_menu = MainMenu(self.start_game, self.close_menu, self.change_volume,
+                                  self.toggle_fullscreen, self.exit_game)
 
         self.state = GameState.INITIALIZED
 
-    def setup(self):
-        pass
-
     def run(self):
-        self.setup()
         self.state = GameState.MAIN_MENU
+        #TODO:: start game
 
+        self.state = GameState.GAME
         while self.state != GameState.QUITTING:
             self.dt = self.clock.tick(FPS) / 1000
             self.events()
@@ -43,6 +43,19 @@ class Game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.state = GameState.QUITTING
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    self.state = GameState.MAIN_MENU
+
+                if self.state == GameState.MAIN_MENU:
+                    if event.key == pygame.K_UP:
+                        self.main_menu.move_up()
+                    elif event.key == pygame.K_DOWN:
+                        self.main_menu.move_down()
+                    elif event.key == pygame.K_RETURN:
+                        self.main_menu.select()
+
 
             if event.type == pygame.MOUSEBUTTONDOWN: 
                 x,y = event.pos
@@ -62,15 +75,44 @@ class Game():
                             self.prev_clicked_tile = sprite
 
     def update(self):
-        if self.prev_left_click_pos:
-            self.cord_box.update(self.prev_left_click_pos)
-        self.units.update()
+        if self.state == GameState.MAIN_MENU:
+            pass
+
+        if self.state == GameState.GAME:
+            if self.prev_left_click_pos:
+                self.cord_box.update(self.prev_left_click_pos)
+            self.units.update()
 
     def draw(self):
         self.screen.fill(Color.DARK_BLUE)
-        self.map.draw(self.screen)
-        if self.prev_left_click_pos:
-            self.cord_box.draw(self.screen)
-        self.units.draw(self.screen)
+
+        if self.state == GameState.MAIN_MENU:
+            self.main_menu.draw(self.screen)
+        
+        if self.state == GameState.GAME:
+            self.map.draw(self.screen)
+            if self.prev_left_click_pos:
+                self.cord_box.draw(self.screen)
+            self.units.draw(self.screen)
+
         pygame.display.flip()
 
+    #Main menu callbacks
+    def start_game(self):
+        self.state = GameState.GAME
+        print('GAME STARTING')
+
+    def close_menu(self):
+        self.state = GameState.GAME
+        print('CLOSE MENU')
+
+    def change_volume(self, volume: float = 0.0):
+        print(f'NEW VOLUME {volume}') #TODO
+
+    def toggle_fullscreen(self):
+        print('TOGGLE FULLSCREEN')
+
+    def exit_game(self):
+        self.state = GameState.QUITTING
+        print('QUITTING')
+    

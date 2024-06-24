@@ -1,20 +1,17 @@
 import pygame
 
+from utils import IsometricConversions as Iso
 
 class Tile_grid():
 
-    def __init__(self, center_w, center_h, block_w, block_h, array_w, array_h) -> None:
-        self.center_w = center_w
-        self.center_h = center_h
+    def __init__(self, block_w, block_h, array_w, array_h) -> None:
+        self.center_w ,self.center_h = Iso.get_center_of_screen()
+        self.start_w , self.start_h = Iso.get_grid_start()
+        
         self.shape_w_amount = array_w
         self.shape_h_amount = array_h
         self.block_w = block_w
         self.block_h = block_h
-        self.start_w = center_w - ((block_w * (self.shape_w_amount + self.shape_h_amount))/4)
-        if ( self.shape_h_amount >  self.shape_w_amount):
-            self.start_h = center_h - ((block_h * (self.shape_h_amount))/4) + (block_h/2)
-        else:
-            self.start_h = center_h + ((block_h * (self.shape_w_amount))/4) - (block_h/2)
 
         self.array = self.generate_array()
     

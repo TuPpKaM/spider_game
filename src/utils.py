@@ -4,6 +4,8 @@ from enum import Enum
 
 import pygame
 
+from settings import *
+
 
 class SpriteLoader:
     def split_sprite(self, path, cols, rows = 1, scale = 1) -> list:
@@ -88,6 +90,50 @@ class AnimationManager:
             raise Exception()
         else:
             return angle
+
+
+class IsometricConversions:
+
+    @staticmethod
+    def get_center_of_screen() -> int:
+        return WIDTH//2 , (HEIGHT//2)
+
+    @staticmethod
+    def get_grid_start() -> int:
+        center_w, center_h = IsometricConversions.get_center_of_screen()
+        center_h += 50 # 50?
+
+        start_w = center_w - ((TILE_W * (TILE_COUNT_W + TILE_COUNT_H))/4)
+        start_h = center_h + ((TILE_H * (TILE_COUNT_W))/4) - (TILE_H/2)
+
+        if ( TILE_COUNT_H >  TILE_COUNT_W):
+            start_h = center_h - ((TILE_H * (TILE_COUNT_H))/4) + (TILE_H/2)
+        return start_w, start_h
+
+    @staticmethod
+    def grid_to_iso(x, y, origin_iso_x, origin_iso_y) -> int:
+        iso_x = origin_iso_x + ((x+y)*(TILE_W//2)) # TODO:: x-y
+        iso_y = origin_iso_y + ((x-y)*(TILE_H//2)) # TODO:: x+y
+        return iso_x, iso_y
+    
+    @staticmethod
+    def iso_to_grid(iso_x, iso_y, origin_iso_x, origin_iso_y) -> int:
+        x = ((iso_x - origin_iso_x) / (TILE_W / 2) + (iso_y - origin_iso_y) / (TILE_H / 2)) / 2
+        y = abs(((iso_y - origin_iso_y) / (TILE_H / 2) - (iso_x - origin_iso_x) / (TILE_W / 2)) / 2) # TODO:: not abs
+        return int(x), int(y)
+    
+    @staticmethod
+    def get_random_coordinate_value(array_2d: list) -> int:
+        row_index = random.randint(0, len(array_2d) - 1)
+        col_index = random.randint(0, len(array_2d[row_index]) - 1)
+        return array_2d[row_index][col_index]
+    
+    @staticmethod
+    def get_random_coordinate_index(array_2d: list) -> int:
+        row_index = random.randint(0, len(array_2d) - 1)
+        col_index = random.randint(0, len(array_2d[row_index]) - 1)
+        return row_index, col_index
+
 
 class Color:
     WHITE = (255, 255, 255)

@@ -8,13 +8,11 @@ from utils import SpriteLoader
 class World:
 
     def __init__(self):
-        world_grid = Tile_grid(center_w=HALF_WIDTH, center_h=HALF_HEIGHT ,block_h=TILE_H, block_w=TILE_W, array_w=TILE_COUNT_W, array_h=TILE_COUNT_H)
-        self.world_start_pos_top_x = world_grid.get_start_pos_top()[0]
-        self.world_start_pos_top_y = world_grid.get_start_pos_top()[1]
-
+        self.tile_grid = Tile_grid(block_h=TILE_H, block_w=TILE_W, array_w=TILE_COUNT_W, array_h=TILE_COUNT_H)
         self.loader = SpriteLoader()
-
-        self.grid_sprites = world_grid.get_grid_group()
+        
+        self.world_start_pos_top_x , self.world_start_pos_top_y = self.tile_grid.get_start_pos_top()
+        self.grid_sprites = self.tile_grid.get_grid_group()
         self.floor_sprites = self.generate_floors()
         self.wall_sprites = self.generate_walls()
 

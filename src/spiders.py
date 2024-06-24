@@ -3,8 +3,9 @@ import random
 
 import pygame
 
-from settings import HALF_HEIGHT, HALF_WIDTH, MAX_EGGS, MEDIUM_EGG_TIMER
+from settings import MAX_EGGS, MEDIUM_EGG_TIMER
 from utils import AnimationManager, AnimationMode, SpriteLoader
+from utils import IsometricConversions as Iso
 
 
 class Egg():
@@ -41,7 +42,10 @@ class Units():
         self.eggs = pygame.sprite.LayeredUpdates()
         self.spiders = pygame.sprite.LayeredUpdates()
 
-    def spawn_spider(self, amount = 1, pos = (HALF_WIDTH, HALF_HEIGHT), spider_type = 0):
+    def spawn_spider(self, amount = 1, pos = None, spider_type = 0):
+        if not pos:
+            pos = Iso.get_center_of_screen()
+
         match spider_type:
             case 0:
                 RedSpider(self.spiders, self.eggs, pos[0], pos[1])

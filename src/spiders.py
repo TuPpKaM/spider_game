@@ -41,6 +41,7 @@ class Units():
 
     def __init__(self, isometric_conversions: IsometricConversions):
         self.isometric_conversions = isometric_conversions
+        self.animation_manager = AnimationManager()
         self.eggs = pygame.sprite.LayeredUpdates()
         self.spiders = pygame.sprite.LayeredUpdates()
 
@@ -50,7 +51,7 @@ class Units():
 
         match spider_type:
             case 0:
-                RedSpider(self.spiders, self.eggs, pos[0], pos[1])
+                RedSpider(self.animation_manager, self.spiders, self.eggs, pos[0], pos[1])
             case _:
                 raise Exception()
 
@@ -66,9 +67,9 @@ class Units():
         
 
 class SpiderBase():
-    def __init__(self, x: int, y: int, update_rate: int = 3):
+    def __init__(self, animation_manager, x: int, y: int, update_rate: int = 3):
         self.sprite_loader = SpriteLoader()
-        self.a_manager = AnimationManager()
+        self.a_manager = animation_manager
         self.a_mode = AnimationMode.IDLE_01
         self.a_angle = 157
         self.visible_image_index = 0
@@ -112,9 +113,9 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         AnimationMode.ATTACK_02:'4|3|0.5'
     }
 
-    def __init__(self, group, egg_group, width: int, height: int, update_rate: int = 3):
+    def __init__(self, animation_manager, group, egg_group, width: int, height: int, update_rate: int = 3):
         pygame.sprite.Sprite.__init__(self, group)
-        SpiderBase.__init__(self, width, height, update_rate)
+        SpiderBase.__init__(self, animation_manager, width, height, update_rate)
         self.egg_laying_chance = 20
         self.egg_group = egg_group
 

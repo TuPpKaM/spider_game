@@ -52,18 +52,21 @@ class SpriteLoader:
 
 
 class AnimationManager:
-    def __init__(self, cache_size: int = 10):
+    def __init__(self, cache_size: int = 25, print: bool = False):
         self.loader = SpriteLoader()
         self.cache = {}
         self.max_cache_size = cache_size
+        self.print = print
 
     def load_animation(self, file_path: str, cols: int, rows: int, scale: float):
         file = os.path.basename(file_path)
         if file in self.cache:
-            print(f"Loaded from cache: {file_path}")
+            if self.print:
+                print(f"Loaded from cache: {file_path}, cache_count: {len(self.cache)}")
             return self.cache[file]
         else:
-            print(f"Loading: {file_path}")
+            if self.print:
+                print(f"Loading: {file_path}")
             animation_images = self.loader.split_sprite(file_path, cols, rows, scale)
             self.cache[file] = animation_images
             self._check_cache_size()
@@ -71,7 +74,8 @@ class AnimationManager:
 
     def unload_animation(self, file_path: str):
         if file_path in self.cache:
-            print(f"Unloading: {file_path}")
+            if self.print:
+                print(f"Unloading: {file_path}")
             del self.cache[file_path]
 
     def _check_cache_size(self):

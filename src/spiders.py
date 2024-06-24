@@ -1,28 +1,39 @@
 
-from functools import partial
 import random
 
 import pygame
 
-from settings import HALF_HEIGHT, HALF_WIDTH
+from settings import HALF_HEIGHT, HALF_WIDTH, MAX_EGGS, MEDIUM_EGG_TIMER
 from utils import AnimationManager, AnimationMode, SpriteLoader
 
+
 class Egg():
-    def __init__(self, spawned: int, grow_time: int):
-        pass
+    def __init__(self, spawned: int = 0, grow_time: int = 0):
+        self.spawned = spawned #TODO
+        self.grow_time = grow_time
 
 class SpiderEgg(pygame.sprite.Sprite, Egg):
 
-    def __init__(self, image: pygame.Surface, width: int, height: int, spawned: int, grow_time: int):
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self, group, image: pygame.Surface, width: int, height: int, spawned: int, grow_time: int):
+        pygame.sprite.Sprite.__init__(self, group)
         Egg.__init__(self, spawned, grow_time)
+        self.ready = False
 
         placeholder_image = pygame.image.load("assets\\tiles\\dot_purple.png").convert_alpha()
+        self.ready_image = pygame.image.load("assets\\tiles\\dot_blue.png").convert_alpha()
 
         self.image = placeholder_image
         self.rect = self.image.get_rect()
         self.rect.center = (width, height)
         self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self):
+        current_time = pygame.time.get_ticks()
+        if current_time - self.spawned >= self.grow_time and not self.ready:
+            print('GROWN')
+            self.image = self.ready_image
+            self.mask = pygame.mask.from_surface(self.image)
+            self.ready = True
 
 class Units():
 
@@ -33,16 +44,13 @@ class Units():
     def spawn_spider(self, amount = 1, pos = (HALF_WIDTH, HALF_HEIGHT), spider_type = 0):
         match spider_type:
             case 0:
-                new_spider = RedSpider(self.add_egg, pos[0], pos[1])
-                self.spiders.add(new_spider)
+                RedSpider(self.spiders, self.eggs, pos[0], pos[1])
             case _:
                 raise Exception()
-    
-    def add_egg(self, egg: SpiderEgg):
-        print('added egg')
-        self.eggs.add(egg)
 
     def update(self):
+        for _ in self.eggs:
+            _.update()
         for _ in self.spiders:
             _.update()
 
@@ -52,7 +60,7 @@ class Units():
         
 
 class SpiderBase():
-    def __init__(self, callback: Units.add_egg, x: int, y: int, update_rate: int = 3):
+    def __init__(self, x: int, y: int, update_rate: int = 3):
         self.sprite_loader = SpriteLoader()
         self.a_manager = AnimationManager()
         self.a_mode = AnimationMode.IDLE_01
@@ -62,8 +70,6 @@ class SpiderBase():
         self.width = x
         self.height = y
         self.update_rate = update_rate
-        self.egg_callback = callback
-        print(self.egg_callback)
 
         file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
         cols, rows, scale = self.a_manager.extract_sheet_info(self.sprite_sheets[self.a_mode])
@@ -100,10 +106,11 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         AnimationMode.ATTACK_02:'4|3|0.5'
     }
 
-    def __init__(self, callback: Units.add_egg, width: int, height: int, update_rate: int = 3):
-        pygame.sprite.Sprite.__init__(self)
-        SpiderBase.__init__(self, callback, width, height, update_rate)
+    def __init__(self, group, egg_group, width: int, height: int, update_rate: int = 3):
+        pygame.sprite.Sprite.__init__(self, group)
+        SpiderBase.__init__(self, width, height, update_rate)
         self.egg_laying_chance = 20
+        self.egg_group = egg_group
 
         self.debug = 0 #DEBUG
 
@@ -113,7 +120,7 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         else:
             self.a_mode = random.choice(list(AnimationMode)) #DEBUG
 
-        self.a_angle = self.a_manager.random_angle(step=45.0)
+        self.a_angle = self.a_manager.random_angle(step=45.0) #DEBUG
 
         file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
         cols, rows, scale = self.a_manager.extract_sheet_info(self.sprite_sheets[self.a_mode])
@@ -133,7 +140,9 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         SpiderBase.update(self)
 
     def lay_eggs(self, pos: tuple = None):
-        if(random.randint(0, 100) < self.egg_laying_chance):
-            print('RedSpider: Laying egg')
-            new_egg = SpiderEgg(None, self.width, self.height+10)
-            self.egg_callback(new_egg)
+        if(len(self.egg_group) < MAX_EGGS):
+            if(random.randint(0, 100) < self.egg_laying_chance):
+                if not pos:
+                    pos = (self.width, self.height+10)
+                    
+                SpiderEgg(self.egg_group, None, pos[0], pos[1], pygame.time.get_ticks(), MEDIUM_EGG_TIMER) #TODO image

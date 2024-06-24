@@ -4,8 +4,9 @@ import random
 import pygame
 
 from settings import MAX_EGGS, MEDIUM_EGG_TIMER
-from utils import AnimationManager, AnimationMode, SpriteLoader
-from utils import IsometricConversions as Iso
+from utils import AnimationManager, AnimationMode
+from utils import IsometricConversions
+from utils import SpriteLoader
 
 
 class Egg():
@@ -38,13 +39,14 @@ class SpiderEgg(pygame.sprite.Sprite, Egg):
 
 class Units():
 
-    def __init__(self):
+    def __init__(self, isometric_conversions: IsometricConversions):
+        self.isometric_conversions = isometric_conversions
         self.eggs = pygame.sprite.LayeredUpdates()
         self.spiders = pygame.sprite.LayeredUpdates()
 
     def spawn_spider(self, amount = 1, pos = None, spider_type = 0):
         if not pos:
-            pos = Iso.get_center_of_screen()
+            pos = self.isometric_conversion.get_center_of_screen()
 
         match spider_type:
             case 0:

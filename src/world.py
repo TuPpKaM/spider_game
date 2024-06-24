@@ -2,13 +2,14 @@ import pygame
 
 from map import Floor, Tile_grid, WallLeft, WallRight
 from settings import *
-from utils import SpriteLoader
+from utils import IsometricConversions, SpriteLoader
 
 
 class World:
 
-    def __init__(self):
-        self.tile_grid = Tile_grid(block_h=TILE_H, block_w=TILE_W, array_w=TILE_COUNT_W, array_h=TILE_COUNT_H)
+    def __init__(self, isometric_conversions: IsometricConversions):
+        self.isometric_conversions = isometric_conversions
+        self.tile_grid = Tile_grid(self.isometric_conversions, block_h=TILE_H, block_w=TILE_W, array_w=TILE_COUNT_W, array_h=TILE_COUNT_H)
         self.loader = SpriteLoader()
         
         self.world_start_pos_top_x , self.world_start_pos_top_y = self.tile_grid.get_start_pos_top()

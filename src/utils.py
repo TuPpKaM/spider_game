@@ -5,6 +5,7 @@ from enum import Enum
 import pygame
 
 from settings import *
+from game_screen_manager import GameScreenSizeManager
 
 
 class SpriteLoader:
@@ -94,13 +95,19 @@ class AnimationManager:
 
 class IsometricConversions:
 
-    @staticmethod
-    def get_center_of_screen() -> int:
-        return WIDTH//2 , (HEIGHT//2)
+    def __init__(self, screen_manager: GameScreenSizeManager):
+        self.screen_manager = screen_manager
+        self.array_2d = None
 
-    @staticmethod
-    def get_grid_start() -> int:
-        center_w, center_h = IsometricConversions.get_center_of_screen()
+    def set_array(self, array_2d: list):
+        self.array_2d = array_2d
+
+    def get_center_of_screen(self) -> int:
+        width, height = self.screen_manager.get_screen_size()
+        return width//2 , height//2
+
+    def get_grid_start(self) -> int:
+        center_w, center_h = self.get_center_of_screen()
         center_h += 50 # 50?
 
         start_w = center_w - ((TILE_W * (TILE_COUNT_W + TILE_COUNT_H))/4)
@@ -110,29 +117,33 @@ class IsometricConversions:
             start_h = center_h - ((TILE_H * (TILE_COUNT_H))/4) + (TILE_H/2)
         return start_w, start_h
 
-    @staticmethod
-    def grid_to_iso(x, y, origin_iso_x, origin_iso_y) -> int:
+    def grid_to_iso(self, x: int, y: int) -> int:
+        origin_iso_x, origin_iso_y = self.get_grid_start()
+
         iso_x = origin_iso_x + ((x+y)*(TILE_W//2)) # TODO:: x-y
         iso_y = origin_iso_y + ((x-y)*(TILE_H//2)) # TODO:: x+y
         return iso_x, iso_y
     
-    @staticmethod
-    def iso_to_grid(iso_x, iso_y, origin_iso_x, origin_iso_y) -> int:
+    def iso_to_grid(self, iso_x: int, iso_y: int, origin_iso_x: int, origin_iso_y: int) -> int:
         x = ((iso_x - origin_iso_x) / (TILE_W / 2) + (iso_y - origin_iso_y) / (TILE_H / 2)) / 2
         y = abs(((iso_y - origin_iso_y) / (TILE_H / 2) - (iso_x - origin_iso_x) / (TILE_W / 2)) / 2) # TODO:: not abs
         return int(x), int(y)
     
-    @staticmethod
-    def get_random_coordinate_value(array_2d: list) -> int:
-        row_index = random.randint(0, len(array_2d) - 1)
-        col_index = random.randint(0, len(array_2d[row_index]) - 1)
-        return array_2d[row_index][col_index]
+    def get_random_coord_value(self) -> int:
+        if self.array_2d:
+            row_index = random.randint(0, len(self.array_2d) - 1)
+            col_index = random.randint(0, len(self.array_2d[row_index]) - 1)
+            return self.array_2d[row_index][col_index]
+        else:
+            raise Exception('No array provided for calculations')
     
-    @staticmethod
-    def get_random_coordinate_index(array_2d: list) -> int:
-        row_index = random.randint(0, len(array_2d) - 1)
-        col_index = random.randint(0, len(array_2d[row_index]) - 1)
-        return row_index, col_index
+    def get_random_coord_index(self) -> int:
+        if self.array_2d:
+            row_index = random.randint(0, len(self.array_2d) - 1)
+            col_index = random.randint(0, len(self.array_2d[row_index]) - 1)
+            return row_index, col_index
+        else:
+            raise Exception('No array provided for calculations')
 
 
 class Color:

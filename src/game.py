@@ -1,24 +1,29 @@
+import time
 import pygame
 
 from gui import CordBox, MainMenu
 from map import Point, Tile
 from settings import *
 from spiders import Units
-from utils import Color, GameState
+from game_screen_manager import GameScreenSizeManager
+from utils import Color, GameState, IsometricConversions
 from world import World
-
 
 class Game():
 
     def __init__(self):
         self.state = GameState.INITIALIZING
 
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen_size_manager = GameScreenSizeManager()
+        screen_w, screen_h = self.screen_size_manager.get_screen_size()
+        self.screen = pygame.display.set_mode((screen_w, screen_h))
         pygame.display.set_caption(GAME_TITLE_WINDOW)
         self.clock = pygame.time.Clock()
-        self.map = World()
-        self.units = Units()
-        self.units.spawn_spider()
+        
+        self.isometric_conversions = IsometricConversions(self.screen_size_manager)
+        self.world = World(self.isometric_conversions)
+        self.units = Units(self.isometric_conversions)
+
         self.prev_clicked_tile = None
         self.prev_left_click_pos = None
         self.font = pygame.font.Font(None, 36)
@@ -61,9 +66,9 @@ class Game():
                 x,y = event.pos
                 self.prev_left_click_pos = ((x,y))
 
-                self.units.spawn_spider(pos=((x,y)))
+                self.units.spawn_spider(pos=((self.isometric_conversions.get_random_coord_value())))
 
-                collisions = pygame.sprite.spritecollide(Point(x,y), self.map.get_grid_sprites(), False, pygame.sprite.collide_mask) #TODO grid_sprites
+                collisions = pygame.sprite.spritecollide(Point(x,y), self.world.get_grid_sprites(), False, pygame.sprite.collide_mask) #TODO grid_sprites
                 if collisions:
                     for sprite in collisions:
                         if isinstance(sprite, Tile):
@@ -90,7 +95,7 @@ class Game():
             self.main_menu.draw(self.screen)
         
         if self.state == GameState.GAME:
-            self.map.draw(self.screen)
+            self.world.draw(self.screen)
             if self.prev_left_click_pos:
                 self.cord_box.draw(self.screen)
             self.units.draw(self.screen)
@@ -115,4 +120,3 @@ class Game():
     def exit_game(self):
         self.state = GameState.QUITTING
         print('QUITTING')
-    

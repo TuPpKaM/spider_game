@@ -64,10 +64,10 @@ class MainMenu:
                     self.game_started = True
                     self.start_game()
             case 1:
+                self.toggle_fullscreen()
+            case 2:
                 new_volume = 0.5
                 self.change_volume(new_volume) #TODO
-            case 2:
-                self.toggle_fullscreen()
             case 3:
                 self.exit_game()
 

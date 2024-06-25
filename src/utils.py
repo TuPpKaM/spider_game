@@ -1,11 +1,12 @@
 import os
 import random
 from enum import Enum
+from random import uniform
 
 import pygame
 
-from settings import *
 from game_screen_manager import GameScreenSizeManager
+from settings import *
 
 
 class SpriteLoader:
@@ -106,6 +107,9 @@ class IsometricConversions:
     def set_array(self, array_2d: list):
         self.array_2d = array_2d
 
+    def get_array(self) -> list:
+        return self.array_2d
+
     def get_center_of_screen(self) -> int:
         width, height = self.screen_manager.get_screen_size()
         return width//2 , height//2
@@ -148,6 +152,31 @@ class IsometricConversions:
             return row_index, col_index
         else:
             raise Exception('No array provided for calculations')
+
+
+class WanderManager:
+
+    def __init__(self, isometric_conversions: IsometricConversions, start_pos_index: tuple, speed: int, steps: int):
+        self.isometric_conversions = isometric_conversions
+        self.current_pos_index = start_pos_index
+        self.speed = speed
+        self.steps = steps
+        self.positions_to_visit_index = []
+
+    def is_positions_left(self) -> bool:
+        return len(self.positions_to_visit_index) > 0
+    
+    def get_next_position(self):
+        return self.positions_to_visit_index.pop(0)
+    
+    def generate_positions(self, amount: int = 3):
+        array = self.isometric_conversions.get_array() # TODO:: within array check
+        for i in range(amount):
+            direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
+            direction = direction.normalize()
+            for _ in range(self.speed):
+                new_pos = self.current_pos_index + (direction * self.steps)
+                self.positions_to_visit_index.append((new_pos))
 
 
 class Color:

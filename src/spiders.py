@@ -4,9 +4,8 @@ import random
 import pygame
 
 from settings import MAX_EGGS, MEDIUM_EGG_TIMER
-from utils import AnimationManager, AnimationMode
-from utils import IsometricConversions
-from utils import SpriteLoader
+from utils import (AnimationManager, AnimationMode, IsometricConversions,
+                   SpriteLoader, WanderManager)
 
 
 class Egg():
@@ -51,7 +50,7 @@ class Units():
 
         match spider_type:
             case 0:
-                RedSpider(self.animation_manager, self.spiders, self.eggs, pos[0], pos[1])
+                RedSpider(self.isometric_conversions, self.animation_manager, self.spiders, self.eggs, pos[0], pos[1], wander=True)
             case _:
                 raise Exception()
 
@@ -67,16 +66,20 @@ class Units():
         
 
 class SpiderBase():
-    def __init__(self, animation_manager, x: int, y: int, update_rate: int = 3):
+    def __init__(self, isometric_conversions: IsometricConversions, animation_manager, x: int, y: int, wander: bool, update_rate: int):
         self.sprite_loader = SpriteLoader()
+        self.isometric_conversions = isometric_conversions
         self.a_manager = animation_manager
         self.a_mode = AnimationMode.IDLE_01
         self.a_angle = 157
         self.visible_image_index = 0
         self.ticks_since_last_frame = 0
-        self.width = x
-        self.height = y
-        self.update_rate = update_rate
+        self.x = x
+        self.y = y
+        self.animation_update_rate = update_rate
+
+        self.wander_manager = WanderManager(self.isometric_conversions, (x,y), speed=10, steps=10)
+        self.wander = wander
 
         file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
         cols, rows, scale = self.a_manager.extract_sheet_info(self.sprite_sheets[self.a_mode])
@@ -84,11 +87,20 @@ class SpiderBase():
 
         self.image = self.images[self.visible_image_index]
         self.rect = self.image.get_rect()
-        self.rect.center = (self.width, self.height)
+        self.rect.center = (self.x, self.y)
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        if(self.ticks_since_last_frame > self.update_rate): 
+        # Wander
+        if(self.wander):   
+            if(not self.wander_manager.is_positions_left()):
+                self.wander_manager.generate_positions()
+
+            self.x , self.y = self.wander_manager.get_next_position()
+            self.rect.center = (self.x, self.y)
+
+        # Animation
+        if(self.ticks_since_last_frame > self.animation_update_rate): 
             self.ticks_since_last_frame = 0   
             self.visible_image_index += 1
 
@@ -101,9 +113,6 @@ class SpiderBase():
         else:
             self.ticks_since_last_frame += 1
 
-    def lay_eggs(self):
-        pass
-
 class RedSpider(pygame.sprite.Sprite, SpiderBase):
 
     sprite_parent_folder = 'assets\\units\\red_spider'
@@ -113,9 +122,9 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         AnimationMode.ATTACK_02:'4|3|0.5'
     }
 
-    def __init__(self, animation_manager, group, egg_group, width: int, height: int, update_rate: int = 3):
+    def __init__(self, isometric_conversions: IsometricConversions, animation_manager, group, egg_group, width: int, height: int, wander: bool = False, update_rate: int = 3):
         pygame.sprite.Sprite.__init__(self, group)
-        SpiderBase.__init__(self, animation_manager, width, height, update_rate)
+        SpiderBase.__init__(self, isometric_conversions, animation_manager, width, height, wander, update_rate)
         self.egg_laying_chance = 20
         self.egg_group = egg_group
 
@@ -150,6 +159,6 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         if(len(self.egg_group) < MAX_EGGS):
             if(random.randint(0, 100) < self.egg_laying_chance):
                 if not pos:
-                    pos = (self.width, self.height+10)
+                    pos = (self.x, self.y+10)
                     
                 SpiderEgg(self.egg_group, None, pos[0], pos[1], pygame.time.get_ticks(), MEDIUM_EGG_TIMER) #TODO image

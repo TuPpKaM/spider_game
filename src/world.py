@@ -24,8 +24,8 @@ class World:
         wall_sprites = self.loader.split_sprite('assets\\tiles\\WallBrick_Tall_01.png', 4, 1, scale=0.5)
         walls_group = pygame.sprite.LayeredUpdates()
 
-        walls_left_count = int(TILE_COUNT_W/6)
-        walls_right_count = int(TILE_COUNT_H/6)
+        walls_left_count = int(TILE_COUNT_H/6)
+        walls_right_count = int(TILE_COUNT_W/6)
 
         for i in range(walls_left_count-1, -1, -1):
             wall = WallLeft(wall_sprites[0], self.world_start_pos_top_x, self.world_start_pos_top_y, TILE_W, TILE_H, i)

@@ -16,6 +16,8 @@ SETTINGS_OPTIONS_GAME = ["Return to game","Fullscreen","Volume","Exit game"]
 # GAME TILES
 TILE_W, TILE_H = 32, 16 
 TILE_COUNT_W, TILE_COUNT_H = 12, 18
+
+POSITION_DECIMALS = 2
 # ----------
 
 # EGG

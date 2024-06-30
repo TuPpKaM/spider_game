@@ -116,7 +116,7 @@ class IsometricConversions:
 
     def get_grid_start(self) -> int:
         center_w, center_h = self.get_center_of_screen()
-        center_h += 50 # 50?
+        center_h += 150 #TODO:: calculate from wall height and grid size
 
         start_w = center_w - ((TILE_W * (TILE_COUNT_W + TILE_COUNT_H))/4)
         start_h = center_h + ((TILE_H * (TILE_COUNT_W))/4) - (TILE_H/2)
@@ -132,51 +132,93 @@ class IsometricConversions:
         iso_y = origin_iso_y + ((x-y)*(TILE_H//2)) # TODO:: x+y
         return iso_x, iso_y
     
-    def iso_to_grid(self, iso_x: int, iso_y: int, origin_iso_x: int, origin_iso_y: int) -> int:
+    def iso_to_grid(self, iso_x: int, iso_y: int) -> int:
+        origin_iso_x, origin_iso_y = self.get_grid_start()
+
         x = ((iso_x - origin_iso_x) / (TILE_W / 2) + (iso_y - origin_iso_y) / (TILE_H / 2)) / 2
         y = abs(((iso_y - origin_iso_y) / (TILE_H / 2) - (iso_x - origin_iso_x) / (TILE_W / 2)) / 2) # TODO:: not abs
         return int(x), int(y)
     
     def get_random_coord_value(self) -> int:
         if self.array_2d:
-            row_index = random.randint(0, len(self.array_2d) - 1)
-            col_index = random.randint(0, len(self.array_2d[row_index]) - 1)
-            return self.array_2d[row_index][col_index]
+            x_index = random.randint(0, len(self.array_2d) - 1)
+            y_index = random.randint(0, len(self.array_2d[0]) - 1)
+            return self.grid_to_iso(x_index,y_index)
         else:
             raise Exception('No array provided for calculations')
     
     def get_random_coord_index(self) -> int:
         if self.array_2d:
-            row_index = random.randint(0, len(self.array_2d) - 1)
-            col_index = random.randint(0, len(self.array_2d[row_index]) - 1)
-            return row_index, col_index
+            x_index = random.randint(0, len(self.array_2d) - 1)
+            y_index = random.randint(0, len(self.array_2d[0]) - 1)
+            return x_index, y_index
         else:
             raise Exception('No array provided for calculations')
 
 
 class WanderManager:
 
-    def __init__(self, isometric_conversions: IsometricConversions, start_pos_index: tuple, speed: int, steps: int):
+    def __init__(self, isometric_conversions: IsometricConversions, start_pos_value: tuple, speed: int, steps: int):
         self.isometric_conversions = isometric_conversions
-        self.current_pos_index = start_pos_index
+        self.current_pos_value = start_pos_value
+        self.target_pos_value = start_pos_value
         self.speed = speed
         self.steps = steps
-        self.positions_to_visit_index = []
+        self.positions_to_visit_value = []
+        self.animation_mode = None
 
-    def is_positions_left(self) -> bool:
-        return len(self.positions_to_visit_index) > 0
+    def has_positions_left(self) -> bool:
+        return len(self.positions_to_visit_value) > 0
     
-    def get_next_position(self):
-        return self.positions_to_visit_index.pop(0)
+    def get_next_position(self) -> tuple:
+        self.current_pos_value = self.positions_to_visit_value.pop(0)
+        round_x = round(self.current_pos_value[0],POSITION_DECIMALS)
+        round_y = round(self.current_pos_value[1],POSITION_DECIMALS)
+        return round_x, round_y
     
-    def generate_positions(self, amount: int = 3):
-        array = self.isometric_conversions.get_array() # TODO:: within array check
-        for i in range(amount):
-            direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
-            direction = direction.normalize()
-            for _ in range(self.speed):
-                new_pos = self.current_pos_index + (direction * self.steps)
-                self.positions_to_visit_index.append((new_pos))
+    def get_animation_mode(self):
+        if not self.has_positions_left or not self.animation_mode:
+            return AnimationMode.IDLE_01
+        else:
+            return self.animation_mode
+    
+    def generate_positions(self):
+        positions_added = 0
+        tries = 0
+        while(positions_added < 1 and tries < 30): #TODO:: replace tries with smarter logic
+            tries += 1
+            positions_added = self._generate_new_positions()
+
+        if(positions_added == 0): #TODO:: debug
+            raise Exception()
+
+        self.animation_mode = AnimationMode.WALK_FORWARD #TODO::determine from direction
+
+    def _generate_new_positions(self) -> int:
+        self.positions_to_visit_value = []
+        prev_pos = self.current_pos_value
+
+        direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
+        direction = direction.normalize()
+
+        for _ in range(self.speed):
+            new_pos = prev_pos + (direction * self.steps)
+            
+            if self._is_within_range(new_pos):
+                self.positions_to_visit_value.append((new_pos))
+                prev_pos = new_pos
+                self.target_pos_value = prev_pos
+            else:
+                return len(self.positions_to_visit_value)
+
+        return len(self.positions_to_visit_value)
+
+    def _is_within_range(self, new_pos: tuple, ):
+        array = self.isometric_conversions.get_array()
+        new_pos_x_index, new_pos_y_index = self.isometric_conversions.iso_to_grid(new_pos[0], new_pos[1])
+
+        return not (new_pos_x_index < 0 or new_pos_x_index >= len(array) or new_pos_y_index < 0 or new_pos_y_index >= len(array[0]))
+
 
 
 class Color:
@@ -193,6 +235,10 @@ class AnimationMode(Enum):
     IDLE_01 = 1
     IDLE_02 = 2
     ATTACK_02 = 12
+    WALK_FORWARD = 21
+    WALK_BACK = 22
+    STRAFE_LEFT = 25
+    STRAFE_RIGHT = 26
 
 class GameState(Enum):
     INITIALIZING = 0

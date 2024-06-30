@@ -21,8 +21,8 @@ class Tile_grid():
     
     def generate_array(self) -> None:
         array = []
-        for i in range (self.shape_h_amount):
-            for j in range (self.shape_w_amount):
+        for i in range (self.shape_w_amount):
+            for j in range (self.shape_h_amount):
                 if j == 0:
                     array.append([])
                 w = self.start_w + (j * (self.block_w/2)) + (i * (self.block_w/2))
@@ -34,7 +34,7 @@ class Tile_grid():
         return (self.start_w, self.start_h)
     
     def get_start_pos_top(self) -> tuple:
-        return self.array[0][self.shape_w_amount-1]
+        return self.array[0][self.shape_h_amount-1]
 
     def get_array(self) -> list:
         return self.array

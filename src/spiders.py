@@ -70,7 +70,7 @@ class SpiderBase():
         self.sprite_loader = SpriteLoader()
         self.isometric_conversions = isometric_conversions
         self.a_manager = animation_manager
-        self.a_mode = AnimationMode.IDLE_01
+        self.a_mode = AnimationMode.WALK_FORWARD #IDLE_01
         self.a_angle = 157
         self.visible_image_index = 0
         self.ticks_since_last_frame = 0
@@ -78,7 +78,7 @@ class SpiderBase():
         self.y = y
         self.animation_update_rate = update_rate
 
-        self.wander_manager = WanderManager(self.isometric_conversions, (x,y), speed=10, steps=10)
+        self.wander_manager = WanderManager(self.isometric_conversions, (x,y), speed=10, steps=3)
         self.wander = wander
 
         file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
@@ -90,18 +90,11 @@ class SpiderBase():
         self.rect.center = (self.x, self.y)
         self.mask = pygame.mask.from_surface(self.image)
 
-    def update(self):
-        # Wander
-        if(self.wander):   
-            if(not self.wander_manager.is_positions_left()):
-                self.wander_manager.generate_positions()
-
-            self.x , self.y = self.wander_manager.get_next_position()
-            self.rect.center = (self.x, self.y)
-
-        # Animation
+    def update(self): # TODO:: delta time dt ?
         if(self.ticks_since_last_frame > self.animation_update_rate): 
             self.ticks_since_last_frame = 0   
+            
+            # Animation image
             self.visible_image_index += 1
 
             if(self.visible_image_index >= len(self.images)):
@@ -110,6 +103,17 @@ class SpiderBase():
             self.image = self.images[self.visible_image_index]
             self.rect = self.image.get_rect(center=self.rect.center)
             self.mask = pygame.mask.from_surface(self.image)
+
+            # Wander pos
+            if(self.wander):   
+                if(not self.wander_manager.has_positions_left()):
+                    self.wander_manager.generate_positions()
+                    self.a_mode = self.wander_manager.get_animation_mode()
+
+                self.x , self.y = self.wander_manager.get_next_position()
+                self.rect.center = (self.x, self.y)
+
+                #print(f'wander pos x{self.x} y{self.y}')
         else:
             self.ticks_since_last_frame += 1
 
@@ -119,7 +123,8 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
     sprite_sheets = { #cols|rows|scale
         AnimationMode.IDLE_01:'4|3|0.5',
         AnimationMode.IDLE_02:'4|3|0.5',
-        AnimationMode.ATTACK_02:'4|3|0.5'
+        AnimationMode.ATTACK_02:'4|3|0.5',
+        AnimationMode.WALK_FORWARD:'3|3|0.5'
     }
 
     def __init__(self, isometric_conversions: IsometricConversions, animation_manager, group, egg_group, width: int, height: int, wander: bool = False, update_rate: int = 3):
@@ -149,7 +154,7 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         self.debug += 1
         if(self.debug == 300):
             self.debug = 0
-            self.change_animation_mode(None)
+            #self.change_animation_mode(None)
             self.lay_eggs()
         #DEBUG ------------------------------
             

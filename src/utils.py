@@ -1,3 +1,4 @@
+import math
 import os
 import random
 from enum import Enum
@@ -90,9 +91,12 @@ class AnimationManager:
     
     def random_angle(self, step: float = 22.5) -> int:
         random_int = random.randint(0, 337)
-        nearest_multiple_index = round(random_int / step)
+        return self.angle_to_animation_angle(random_int, step)
+        
+    def angle_to_animation_angle(self, input_angle: int, step: float = 22.5):
+        nearest_multiple_index = round(input_angle / step)
         angle = int(nearest_multiple_index * step)
-        if(angle < 0 or angle > 337):
+        if(angle < 0 or angle > 337): #TODO:: hard-coded 337, Exception
             raise Exception()
         else:
             return angle
@@ -136,7 +140,7 @@ class IsometricConversions:
         origin_iso_x, origin_iso_y = self.get_grid_start()
 
         x = ((iso_x - origin_iso_x) / (TILE_W / 2) + (iso_y - origin_iso_y) / (TILE_H / 2)) / 2
-        y = abs(((iso_y - origin_iso_y) / (TILE_H / 2) - (iso_x - origin_iso_x) / (TILE_W / 2)) / 2) # TODO:: not abs
+        y = -(((iso_y - origin_iso_y) / (TILE_H / 2) - (iso_x - origin_iso_x) / (TILE_W / 2)) / 2)
         return int(x), int(y)
     
     def get_random_coord_value(self) -> int:
@@ -166,6 +170,7 @@ class WanderManager:
         self.steps = steps
         self.positions_to_visit_value = []
         self.animation_mode = None
+        self.animation_angle = 0
 
     def has_positions_left(self) -> bool:
         return len(self.positions_to_visit_value) > 0
@@ -181,6 +186,9 @@ class WanderManager:
             return AnimationMode.IDLE_01
         else:
             return self.animation_mode
+        
+    def get_animation_angle(self):
+        return self.animation_angle
     
     def generate_positions(self):
         positions_added = 0
@@ -201,6 +209,8 @@ class WanderManager:
         direction = pygame.math.Vector2(uniform(-1, 1), uniform(-1, 1))
         direction = direction.normalize()
 
+        self.animation_angle = self._direction_to_degrees(direction)
+
         for _ in range(self.speed):
             new_pos = prev_pos + (direction * self.steps)
             
@@ -218,6 +228,13 @@ class WanderManager:
         new_pos_x_index, new_pos_y_index = self.isometric_conversions.iso_to_grid(new_pos[0], new_pos[1])
 
         return not (new_pos_x_index < 0 or new_pos_x_index >= len(array) or new_pos_y_index < 0 or new_pos_y_index >= len(array[0]))
+    
+    def _direction_to_degrees(self, direction: pygame.math.Vector2 ) -> int:
+        angle_degrees = (math.degrees(math.atan2(direction.y, direction.x)) + 90) % 360
+        if angle_degrees > 337: #TODO:: hard-coded 337
+            angle_degrees = 337
+
+        return int(angle_degrees)
 
 
 

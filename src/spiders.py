@@ -81,10 +81,15 @@ class SpiderBase():
         self.wander_manager = WanderManager(self.isometric_conversions, (x,y), speed=10, steps=3)
         self.wander = wander
 
+        self._load_animation_images()
+        self._load_image()
+
+    def _load_animation_images(self):
         file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
         cols, rows, scale = self.a_manager.extract_sheet_info(self.sprite_sheets[self.a_mode])
         self.images = self.a_manager.load_animation(file_path, cols, rows, scale)
-
+    
+    def _load_image(self):
         self.image = self.images[self.visible_image_index]
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
@@ -109,6 +114,10 @@ class SpiderBase():
                 if(not self.wander_manager.has_positions_left()):
                     self.wander_manager.generate_positions()
                     self.a_mode = self.wander_manager.get_animation_mode()
+                    wander_angle = self.wander_manager.get_animation_angle()
+                    self.a_angle = self.a_manager.angle_to_animation_angle(wander_angle)
+                    self._load_animation_images()
+                    self._load_image()
 
                 self.x , self.y = self.wander_manager.get_next_position()
                 self.rect.center = (self.x, self.y)

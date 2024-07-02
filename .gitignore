@@ -36,3 +36,6 @@ coverage.xml
 
 # Assets
 assets/units/*
+
+# Not used
+src/_pil_sprite_helper.py

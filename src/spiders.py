@@ -40,17 +40,20 @@ class Units():
 
     def __init__(self, isometric_conversions: IsometricConversions):
         self.isometric_conversions = isometric_conversions
-        self.animation_manager = AnimationManager()
+        self.animation_manager = AnimationManager(cache_size=100)
         self.eggs = pygame.sprite.LayeredUpdates()
         self.spiders = pygame.sprite.LayeredUpdates()
 
-    def spawn_spider(self, amount = 1, pos = None, spider_type = 0):
+    def spawn_spider(self, amount = 10, pos = None, spider_type = 0):
         if not pos:
             pos = self.isometric_conversion.get_center_of_screen()
 
         match spider_type:
             case 0:
                 RedSpider(self.isometric_conversions, self.animation_manager, self.spiders, self.eggs, pos[0], pos[1], wander=True)
+            case 1:
+                for _ in range(amount):
+                    Spiderling(self.isometric_conversions, self.animation_manager, self.spiders, pos[0], pos[1], wander=True)
             case _:
                 raise Exception()
 
@@ -144,26 +147,11 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
 
         self.debug = 0 #DEBUG
 
-    def change_animation_mode(self, mode: AnimationMode):
-        if mode:
-            self.a_mode = mode
-        else:
-            self.a_mode = random.choice(list(AnimationMode)) #DEBUG
-
-        self.a_angle = self.a_manager.random_angle(step=45.0) #DEBUG
-
-        file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
-        cols, rows, scale = self.a_manager.extract_sheet_info(self.sprite_sheets[self.a_mode])
-        self.images = self.a_manager.load_animation(file_path, cols, rows, scale)
-        self.visible_image_index = 0
-        self.ticks_since_last_frame = 0
-
     def update(self):
         #DEBUG ------------------------------
         self.debug += 1
         if(self.debug == 300):
             self.debug = 0
-            #self.change_animation_mode(None)
             self.lay_eggs()
         #DEBUG ------------------------------
             
@@ -176,3 +164,21 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
                     pos = (self.x, self.y+10)
                     
                 SpiderEgg(self.egg_group, None, pos[0], pos[1], pygame.time.get_ticks(), MEDIUM_EGG_TIMER) #TODO image
+
+
+class Spiderling(pygame.sprite.Sprite, SpiderBase):
+
+    sprite_parent_folder = 'assets\\units\\spiderling'
+    sprite_sheets = { #cols|rows|scale
+        AnimationMode.IDLE_01:'4|3|1',
+        AnimationMode.IDLE_02:'4|3|1',
+        AnimationMode.ATTACK_02:'4|3|1',
+        AnimationMode.WALK_FORWARD:'3|3|1'
+    }
+
+    def __init__(self, isometric_conversions: IsometricConversions, animation_manager, group, width: int, height: int, wander: bool = False, update_rate: int = 3):
+        pygame.sprite.Sprite.__init__(self, group)
+        SpiderBase.__init__(self, isometric_conversions, animation_manager, width, height, wander, update_rate)
+
+    def update(self):
+        SpiderBase.update(self)

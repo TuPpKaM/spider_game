@@ -3,10 +3,10 @@ import random
 
 import pygame
 
+from registry import Registry, ClassRegistry
 from settings import MAX_EGGS, MEDIUM_EGG_TIMER
 from utils import (AnimationManager, AnimationMode, IsometricConversions,
                    SpriteLoader, WanderManager)
-
 
 class Egg():
     def __init__(self, spawned: int = 0, grow_time: int = 0):
@@ -69,6 +69,7 @@ class Units():
         
 
 class SpiderBase():
+
     def __init__(self, isometric_conversions: IsometricConversions, animation_manager, x: int, y: int, wander: bool, update_rate: int):
         self.sprite_loader = SpriteLoader()
         self.isometric_conversions = isometric_conversions
@@ -86,6 +87,8 @@ class SpiderBase():
 
         self._load_animation_images()
         self._load_image()
+
+        Registry.register_instance(self)
 
     def _load_animation_images(self):
         file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
@@ -128,6 +131,35 @@ class SpiderBase():
                 #print(f'wander pos x{self.x} y{self.y}')
         else:
             self.ticks_since_last_frame += 1
+        
+    def to_dict(self):
+        return {
+            'class_name': self.__class__.__name__,
+            'a_mode': self.a_mode.name,
+            'a_angle': self.a_angle,
+            'visible_image_index': self.visible_image_index,
+            'ticks_since_last_frame': self.ticks_since_last_frame,
+            'x': self.x,
+            'y': self.y,
+            'animation_update_rate': self.animation_update_rate,
+            'wander': self.wander
+        }
+    
+    @classmethod
+    def from_dict(cls, data, isometric_conversions, animation_manager):
+        instance = cls(
+            isometric_conversions, 
+            animation_manager, 
+            data['x'], 
+            data['y'], 
+            data['wander'],
+            data['animation_update_rate']
+        )
+        instance.a_mode = AnimationMode[data['a_mode']]
+        instance.a_angle = data['a_angle']
+        instance.visible_image_index = data['visible_image_index']
+        instance.ticks_since_last_frame = data['ticks_since_last_frame']
+        return instance
 
 class RedSpider(pygame.sprite.Sprite, SpiderBase):
 
@@ -144,6 +176,8 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
         SpiderBase.__init__(self, isometric_conversions, animation_manager, width, height, wander, update_rate)
         self.egg_laying_chance = 20
         self.egg_group = egg_group
+
+        Registry.register_instance(self)    
 
         self.debug = 0 #DEBUG
 
@@ -165,6 +199,30 @@ class RedSpider(pygame.sprite.Sprite, SpiderBase):
                     
                 SpiderEgg(self.egg_group, None, pos[0], pos[1], pygame.time.get_ticks(), MEDIUM_EGG_TIMER) #TODO image
 
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            'class_name': self.__class__.__name__,
+        })
+        return data
+    
+    @classmethod
+    def from_dict(cls, data, isometric_conversions, animation_manager, group, egg_group):
+        instance = cls(
+            isometric_conversions, 
+            animation_manager,
+            group,
+            egg_group, 
+            data['x'], 
+            data['y'], 
+            data['wander'], 
+            data['animation_update_rate']
+        )
+        instance.a_mode = AnimationMode[data['a_mode']]
+        instance.a_angle = data['a_angle']
+        instance.visible_image_index = data['visible_image_index']
+        instance.ticks_since_last_frame = data['ticks_since_last_frame']
+        return instance
 
 class Spiderling(pygame.sprite.Sprite, SpiderBase):
 
@@ -180,5 +238,36 @@ class Spiderling(pygame.sprite.Sprite, SpiderBase):
         pygame.sprite.Sprite.__init__(self, group)
         SpiderBase.__init__(self, isometric_conversions, animation_manager, width, height, wander, update_rate)
 
+        Registry.register_instance(self) 
+
     def update(self):
         SpiderBase.update(self)
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            'class_name': self.__class__.__name__,
+        })
+        return data
+    
+    @classmethod
+    def from_dict(cls, data, isometric_conversions, animation_manager, group):
+        instance = cls(
+            isometric_conversions, 
+            animation_manager,
+            group,
+            data['x'], 
+            data['y'], 
+            data['wander'], 
+            data['animation_update_rate']
+        )
+        instance.a_mode = AnimationMode[data['a_mode']]
+        instance.a_angle = data['a_angle']
+        instance.visible_image_index = data['visible_image_index']
+        instance.ticks_since_last_frame = data['ticks_since_last_frame']
+        return instance
+    
+#TODO:: register all classes
+ClassRegistry.register_class(SpiderBase)
+ClassRegistry.register_class(RedSpider)
+ClassRegistry.register_class(Spiderling)

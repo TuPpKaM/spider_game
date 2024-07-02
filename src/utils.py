@@ -260,6 +260,8 @@ class AnimationMode(Enum):
 class GameState(Enum):
     INITIALIZING = 0
     INITIALIZED = 1
-    MAIN_MENU = 2
-    GAME = 3
-    QUITTING = 10
+    LOADING = 2
+    LOADED = 3
+    MAIN_MENU = 10
+    GAME = 15
+    QUITTING = 20

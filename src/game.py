@@ -5,7 +5,7 @@ import pygame
 from game_screen_manager import GameScreenSizeManager
 from gui import CordBox, MainMenu
 from map import Point, Tile
-from registry import Registry
+from registry import ClassRegistry, Registry
 from settings import *
 from spiders import Units
 from utils import AnimationManager, Color, GameState, IsometricConversions
@@ -24,8 +24,9 @@ class Game():
         self.clock = pygame.time.Clock()
         
         self.isometric_conversions = IsometricConversions(self.screen_size_manager)
+        self.animation_manager = AnimationManager(cache_size=100)
         self.world = World(self.isometric_conversions)
-        self.units = Units(self.isometric_conversions)
+        self.units = Units(self.isometric_conversions, self.animation_manager)
 
         self.prev_clicked_tile = None
         self.prev_left_click_pos = None
@@ -40,12 +41,10 @@ class Game():
         self.state = GameState.LOADING
 
         Registry._registry = []
-        self.animation_manager = AnimationManager(cache_size=100)
-        self.spiders = pygame.sprite.LayeredUpdates()
-        self.eggs = pygame.sprite.LayeredUpdates()
-        Registry.load_from_file('instances.json', self.isometric_conversions, self.animation_manager, self.spiders, self.eggs)
-        self.units.spiders = self.spiders #TODO:: load more than spiders
-        self.units.eggs = self.eggs #TODO:: init Units using funcetions instead of directly
+        spiders = pygame.sprite.LayeredUpdates()
+        eggs = pygame.sprite.LayeredUpdates()
+        self.units.set_sprite_groups(spiders, eggs)
+        Registry.load_from_file('instances.json', self.isometric_conversions, self.animation_manager, spiders, eggs)
 
         self.state = GameState.LOADED
 
@@ -84,8 +83,8 @@ class Game():
                 x,y = event.pos
                 self.prev_left_click_pos = ((x,y))
 
-                
-                self.units.spawn_spider(pos=((self.isometric_conversions.get_random_coord_value())), spider_type = 1)
+                self.units.spawn_spider(amount=1, pos=((self.isometric_conversions.get_random_coord_value())), spider_type = 0)
+                #self.units.spawn_spider(pos=((self.isometric_conversions.get_random_coord_value())), spider_type = 1)
 
                 #self.units.spawn_spider(pos=((self.isometric_conversions.get_grid_start())))
                 #self.units.spawn_spider(pos=((self.isometric_conversions.grid_to_iso(12,0))))
@@ -149,9 +148,29 @@ class Game():
         print(f'NEW VOLUME {volume}') #TODO
 
     def toggle_fullscreen(self):
-        Registry.save_to_file('instances.json') #TODO:: move to correct
+        self.clear_eggs()
+        self.clear_spiders()
         print('TOGGLE FULLSCREEN')
 
     def exit_game(self):
+        self.state = GameState.SAVING
+        self.save_game()
+        self.state = GameState.SAVED
+        print('SAVED')
         self.state = GameState.QUITTING
         print('QUITTING')
+
+    #Other
+    def save_game(self):
+        Registry.save_to_file('instances.json')
+
+    def clear_spiders(self):
+        self.units.clear_spider_group()
+        Registry.remove_instances_of_class(ClassRegistry.get_class('SpiderBase'))
+        Registry.remove_instances_of_class(ClassRegistry.get_class('RedSpider'))
+        Registry.remove_instances_of_class(ClassRegistry.get_class('Spiderling'))
+        print('CLEARED SPIDERS')
+
+    def clear_eggs(self):
+        self.units.clear_eggs_group()
+        print('CLEARED EGGS')

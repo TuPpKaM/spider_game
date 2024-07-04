@@ -237,7 +237,6 @@ class WanderManager:
         return int(angle_degrees)
 
 
-
 class Color:
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
@@ -262,6 +261,10 @@ class GameState(Enum):
     INITIALIZED = 1
     LOADING = 2
     LOADED = 3
+
     MAIN_MENU = 10
     GAME = 15
-    QUITTING = 20
+
+    SAVING = 20
+    SAVED = 21
+    QUITTING = 22

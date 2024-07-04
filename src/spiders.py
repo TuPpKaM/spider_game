@@ -3,10 +3,11 @@ import random
 
 import pygame
 
-from registry import Registry, ClassRegistry
+from registry import ClassRegistry, Registry
 from settings import MAX_EGGS, MEDIUM_EGG_TIMER
 from utils import (AnimationManager, AnimationMode, IsometricConversions,
                    SpriteLoader, WanderManager)
+
 
 class Egg():
     def __init__(self, spawned: int = 0, grow_time: int = 0):
@@ -38,9 +39,9 @@ class SpiderEgg(pygame.sprite.Sprite, Egg):
 
 class Units():
 
-    def __init__(self, isometric_conversions: IsometricConversions):
+    def __init__(self, isometric_conversions: IsometricConversions, animation_manager: AnimationManager):
         self.isometric_conversions = isometric_conversions
-        self.animation_manager = AnimationManager(cache_size=100)
+        self.animation_manager = animation_manager
         self.eggs = pygame.sprite.LayeredUpdates()
         self.spiders = pygame.sprite.LayeredUpdates()
 
@@ -56,6 +57,16 @@ class Units():
                     Spiderling(self.isometric_conversions, self.animation_manager, self.spiders, pos[0], pos[1], wander=True)
             case _:
                 raise Exception()
+            
+    def set_sprite_groups(self, spiders, eggs):
+        self.spiders = spiders
+        self.eggs = eggs
+    
+    def clear_spider_group(self):
+        self.spiders.empty()
+
+    def clear_eggs_group(self):
+        self.eggs.empty()
 
     def update(self):
         for _ in self.eggs:
@@ -88,7 +99,7 @@ class SpiderBase():
         self._load_animation_images()
         self._load_image()
 
-        Registry.register_instance(self)
+        #Registry.register_instance(self)
 
     def _load_animation_images(self):
         file_path = self.sprite_loader.find_sheet_in_folder(self.sprite_parent_folder,self.a_mode.name,self.a_angle)
@@ -267,7 +278,9 @@ class Spiderling(pygame.sprite.Sprite, SpiderBase):
         instance.ticks_since_last_frame = data['ticks_since_last_frame']
         return instance
     
-#TODO:: register all classes
+ClassRegistry.register_class(Egg)
+ClassRegistry.register_class(SpiderEgg)
+ClassRegistry.register_class(Units)
 ClassRegistry.register_class(SpiderBase)
 ClassRegistry.register_class(RedSpider)
 ClassRegistry.register_class(Spiderling)

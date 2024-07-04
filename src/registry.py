@@ -21,27 +21,29 @@ class Registry:
         cls._registry.append(instance)
 
     @classmethod
+    def remove_instances_of_class(cls, class_type):
+        cls._registry = [instance for instance in cls._registry if not isinstance(instance, class_type)]
+
+    @classmethod
     def to_dict(cls):
         return [instance.to_dict() for instance in cls._registry]
 
     @classmethod
     def save_to_file(cls, filename):
         with open(filename, 'w') as f:
+            f.truncate(0)
             json.dump(cls.to_dict(), f)
     
     @classmethod
     def from_dict(cls, data, isometric_conversions, animation_manager, group, egg_group):
         for item in data:
             class_name = item.pop('class_name')
-            print(f'CLASS NAME:: {class_name}', item)
             class_ref = ClassRegistry.get_class(class_name) #class_ref = globals()[class_name]
             #TODO:: cleanup if else
             if class_name == 'Spiderling':
-                instance = class_ref.from_dict(item, isometric_conversions, animation_manager, group)
-                cls.register_instance(instance)
+                class_ref.from_dict(item, isometric_conversions, animation_manager, group)
             elif class_name == 'RedSpider':
-                instance = class_ref.from_dict(item, isometric_conversions, animation_manager, group, egg_group)
-                cls.register_instance(instance)
+                class_ref.from_dict(item, isometric_conversions, animation_manager, group, egg_group)
             else:
                 raise ValueError(f"Unknown class name: {class_name}")
             

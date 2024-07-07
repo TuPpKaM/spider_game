@@ -1,3 +1,4 @@
+from typing import Tuple
 import pygame
 
 from utils import IsometricConversions
@@ -107,10 +108,10 @@ class WallLeft(pygame.sprite.Sprite):
 
 class Floor(pygame.sprite.Sprite):
     
-    def __init__(self, image, x , y, tile_w, tile_h, wall_index):
+    def __init__(self, image, x , y, tile_w, tile_h, cord: Tuple[int,int]):
         pygame.sprite.Sprite.__init__(self)
 
-        offset = ((32*3)+8,16*7)
+        offset = (((tile_w*3)+8) - (cord[0] * (3*tile_w)) + (cord[1] * (3*tile_w)) ,(tile_h*7) + (cord[0] * (3*tile_h)) + (cord[1] * (3*tile_h)))
 
         self.image = image
         self.rect = self.image.get_rect()

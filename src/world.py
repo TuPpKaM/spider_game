@@ -43,9 +43,13 @@ class World:
         floor_sprites = self.loader.split_sprite('assets\\tiles\\Floor_Corner_01.png', 4, 1, scale=0.5)
         floor_group = pygame.sprite.LayeredUpdates()
 
-        floor = Floor(floor_sprites[0],self.world_start_pos_top_x, self.world_start_pos_top_y,0,0,0)
-        floor_group.add(floor)
-        floor_group.move_to_back(floor)
+        floors_x_count = int(TILE_COUNT_H/6)
+        floors_y_count = int(TILE_COUNT_W/6)
+        for x in range(floors_x_count-1, -1, -1):
+            for y in range(floors_y_count-1, -1, -1):
+                floor = Floor(floor_sprites[0], self.world_start_pos_top_x, self.world_start_pos_top_y, TILE_W, TILE_H,((x,y)))
+                floor_group.add(floor)
+                floor_group.move_to_back(floor)
 
         return floor_group
     

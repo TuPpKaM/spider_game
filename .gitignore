@@ -37,9 +37,5 @@ coverage.xml
 # Assets
 assets/units/*
 
-# Saved instances
-instances.json
+# Saved instances copy
 instances copy.json
-
-# Not used
-src/_pil_sprite_helper.py
